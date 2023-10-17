@@ -46,19 +46,76 @@ We start by installing all the required packages
 
 ```{r Install Packages, echo=TRUE, message=FALSE, warning=FALSE}
 ## formatR - Required to format R code in the markdown ----
-if (!is.element("formatR", installed.packages()[, 1])) {
-  install.packages("formatR", dependencies = TRUE,
-                   repos="https://cloud.r-project.org")
+
+if (require("languageserver")) {
+  require("languageserver")
+} else {
+  install.packages("languageserver", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
 }
-require("formatR")
 
+# Introduction ----
+# Resampling methods are techniques that can be used to improve the performance
+# and reliability of machine learning algorithms. They work by creating
+# multiple training sets from the original training set. The model is then
+# trained on each training set, and the results are averaged. This helps to
+# reduce overfitting and improve the model's generalization performance.
 
-## readr - Load datasets from CSV files ----
-if (!is.element("readr", installed.packages()[, 1])) {
+# Resampling methods include:
+## Splitting the dataset into train and test sets ----
+## Bootstrapping (sampling with replacement) ----
+## Basic k-fold cross validation ----
+## Repeated cross validation ----
+## Leave One Out Cross-Validation (LOOCV) ----
+
+# STEP 1. Install and Load the Required Packages ----
+## caret ----
+if (require("caret")) {
+  require("caret")
+} else {
+  install.packages("caret", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+## klaR ----
+if (require("klaR")) {
+  require("klaR")
+} else {
+  install.packages("klaR", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+## e1071 ----
+if (require("e1071")) {
+  require("e1071")
+} else {
+  install.packages("e1071", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+## readr ----
+if (require("readr")) {
+  require("readr")
+} else {
   install.packages("readr", dependencies = TRUE,
-                   repos="https://cloud.r-project.org")
+                   repos = "https://cloud.r-project.org")
 }
-require("readr")
+
+## LiblineaR ----
+if (require("LiblineaR")) {
+  require("LiblineaR")
+} else {
+  install.packages("LiblineaR", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+## naivebayes ----
+if (require("naivebayes")) {
+  require("naivebayes")
+} else {
+  install.packages("naivebayes", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
 ```
 
 ------------------------------------------------------------------------
@@ -94,197 +151,75 @@ knitr::opts_chunk$set(
 > editor_options:\
 > chunk_output_type: console
 
-# Loading the Student Performance Dataset
+# Loading the PimaIndians Dataset
 
-The 20230412-20230719-BI1-BBIT4-1-StudentPerformanceDataset is then loaded. The dataset and its metadata are available here: <https://drive.google.com/drive/folders/1-BGEhfOwquXF6KKXwcvrx7WuZXuqmW9q?usp=sharing>
+The PimaIndians Dataset is then loaded. 
 
 ```{r Load Dataset}
-Student_dataset <-
-  readr::read_csv(
-                  "C:/Users/User/Documents/BBT4206-R-Lab2of15-ExploratoryDataAnalysis-Well-Beast/data/20230412-20230719-BI1-BBIT4-1-StudentPerformanceDataset - dataset (1).csv", # nolint
-                  col_types =
-                  readr::cols(
-                              class_group =
-                              readr::col_factor(levels = c("A", "B", "C")),
-                              gender = readr::col_factor(levels = c("1", "0")),
-                              YOB = readr::col_date(format = "%Y"),
-                              regret_choosing_bi =
-                              readr::col_factor(levels = c("1", "0")),
-                              drop_bi_now =
-                              readr::col_factor(levels = c("1", "0")),
-                              motivator =
-                              readr::col_factor(levels = c("1", "0")),
-                              read_content_before_lecture =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              anticipate_test_questions =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              answer_rhetorical_questions =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              find_terms_I_do_not_know =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              copy_new_terms_in_reading_notebook =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              take_quizzes_and_use_results =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              reorganise_course_outline =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              write_down_important_points =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              space_out_revision =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              studying_in_study_group =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              schedule_appointments =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              goal_oriented =
-                              readr::col_factor(levels =
-                                                c("1", "0")),
-                              spaced_repetition =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4")),
-                              testing_and_active_recall =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4")),
-                              interleaving =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4")),
-                              categorizing =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4")),
-                              retrospective_timetable =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4")),
-                              cornell_notes =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4")),
-                              sq3r = readr::col_factor(levels =
-                                                       c("1", "2", "3", "4")),
-                              commute = readr::col_factor(levels =
-                                                          c("1", "2",
-                                                            "3", "4")),
-                              study_time = readr::col_factor(levels =
-                                                             c("1", "2",
-                                                               "3", "4")),
-                              repeats_since_Y1 = readr::col_integer(),
-                              paid_tuition = readr::col_factor(levels =
-                                                               c("0", "1")),
-                              free_tuition = readr::col_factor(levels =
-                                                               c("0", "1")),
-                              extra_curricular = readr::col_factor(levels =
-                                                                   c("0", "1")),
-                              sports_extra_curricular =
-                              readr::col_factor(levels = c("0", "1")),
-                              exercise_per_week = readr::col_factor(levels =
-                                                                    c("0", "1",
-                                                                      "2",
-                                                                      "3")),
-                              meditate = readr::col_factor(levels =
-                                                           c("0", "1",
-                                                             "2", "3")),
-                              pray = readr::col_factor(levels =
-                                                       c("0", "1",
-                                                         "2", "3")),
-                              internet = readr::col_factor(levels =
-                                                           c("0", "1")),
-                              laptop = readr::col_factor(levels = c("0", "1")),
-                              family_relationships =
-                              readr::col_factor(levels =
-                                                c("1", "2", "3", "4", "5")),
-                              friendships = readr::col_factor(levels =
-                                                              c("1", "2", "3",
-                                                                "4", "5")),
-                              romantic_relationships =
-                              readr::col_factor(levels =
-                                                c("0", "1", "2", "3", "4")),
-                              spiritual_wellnes =
-                              readr::col_factor(levels = c("1", "2", "3",
-                                                           "4", "5")),
-                              financial_wellness =
-                              readr::col_factor(levels = c("1", "2", "3",
-                                                           "4", "5")),
-                              health = readr::col_factor(levels = c("1", "2",
-                                                                    "3", "4",
-                                                                    "5")),
-                              day_out = readr::col_factor(levels = c("0", "1",
-                                                                     "2", "3")),
-                              night_out = readr::col_factor(levels = c("0",
-                                                                       "1", "2",
-                                                                       "3")),
-                              alcohol_or_narcotics =
-                              readr::col_factor(levels = c("0", "1", "2", "3")),
-                              mentor = readr::col_factor(levels = c("0", "1")),
-                              mentor_meetings = readr::col_factor(levels =
-                                                                  c("0", "1",
-                                                                    "2", "3")),
-                              `Attendance Waiver Granted: 1 = Yes, 0 = No` =
-                              readr::col_factor(levels = c("0", "1")),
-                              GRADE = readr::col_factor(levels =
-                                                        c("A", "B", "C", "D",
-                                                          "E"))),
-                  locale = readr::locale())
+require("mlbench")
+
+data("PimaIndiansDiabetes")
+
+summary(PimaIndiansDiabetes)
+
+str(PimaIndiansDiabetes)
+
 ```
 
 ## Description of the Dataset
 
-We then display the number of observations and number of variables. We have 101 observations and 100 variables to work with.
+We then display the number of observations and number of variables. 9 Variables and 768 observations.
 
 ```{r Your Fourth Code Chunk}
-dim(Student_dataset)
+dim(PimaIndiansDiabetes)
 ```
 
-Next, we display the quartiles for each numeric variable[*... this is the process of **"storytelling using the data."** The goal is to analyse the Student dataset and try to find a relation between the various variables and the exam mark( which variables or combination or variables affect the exam marks the most).*]{#highlight style="color: blue"}
+Next, we display the quartiles for each numeric variable[*... this is the process of **"storytelling using the data."** The goal is to analyse the PimaIndians dataset and try to train a model to make predictions( which model is most suited for this dataset).*]{#highlight style="color: blue"}
 
 ```{r Your Fifth Code Chunk}
-summary(Student_dataset)
+summary(PimaIndiansDiabetes)
 ```
 
-# \<Measure of Mode of Writing down important point, and take quizzes and uses results\>
+# \<Splitting the dataset\>
 
-First we checked to see if the variable writing down important points, and take quizzes and use results were numeric. Next we measured the freqency of the outputs for this variable.
-
-We found that a majority of the Students specifically 37.62% frequency of 4 and 37.62% frequency of 5 wrote down important notes and took quizzes and used results.
+Split the dataset. Define an 80:20 train:test split ratio of the dataset (80% of the original data will be used to train the model and 20% of the original data will be used to test the model).
 
 ```{r Your Sixth Code Chunk}
-sapply(Student_dataset, class) #For getting the data type.
-
-Student_dataset_write_down_important_points_freq <- Student_dataset$write_down_important_points
-cbind(frequency = table(Student_dataset_write_down_important_points_freq),
-      percentage = prop.table(table(Student_dataset_write_down_important_points_freq)) * 100) #For getting frequency of writing down important points.
-
-Student_dataset_take_quizzes_and_use_results_freq <- Student_dataset$take_quizzes_and_use_results
-cbind(frequency = table(Student_dataset_take_quizzes_and_use_results_freq),
-      percentage = prop.table(table(Student_dataset_take_quizzes_and_use_results_freq)) * 100) #For getting frequency of take quizzes and use results.
-
-
+train_index <- createDataPartition(PimaIndiansDiabetes$`diabetes`,
+                                   p = 0.80, list = FALSE)
+diabetes_dataset_train <- PimaIndiansDiabetes[train_index, ]
+diabetes_dataset_test <- PimaIndiansDiabetes[-train_index, ]
 
 ```
 
-## \<measuring covariance \>
-The Covariance of Write down important points is and that of Take quizzes and use results is 0.4099010
+## \<Classification: SVM with Repeated k-fold Cross Validation\>
+SVM Classifier using 5-fold cross validation with 3 reps. We train a Support Vector Machine (for classification) using "diabetes" variable in the training dataset based on a repeated 5-fold cross validation train control with 3 reps.
+
+The repeated k-fold cross-validation method involves repeating the number of times the dataset is split into k-subsets. The final model accuracy/RMSE is taken as the mean from the number of repeats
 
 ```{r Your Seventh Code Chunk}
+train_control <- trainControl(method = "repeatedcv", number = 5, repeats = 3)
+
+diabetes_dateset_model_svm <-
+  caret::train(`diabetes` ~ ., data = diabetes_dataset_train,
+               trControl = train_control, na.action = na.omit,
+               method = "svmLinearWeights2", metric = "Accuracy")
+```
+
+## \<Test the trained SVM model using the testing dataset\>
+We then proceed to train the model using the testing dataset namely "diabetes_dataset_test". We opted to use SVM because we had many variables and one of the benefits of SVM is that it allows us to find data that is not regularly distributed. It generally does not suffer from overfitting and performs well when there is a difference in classes.
+
+```{r Your Eighth Code Chunk}
+predictions_svm <- predict(diabetes_dateset_model_svm, diabetes_dataset_test[, 1:9])
 
 ```
 
-## \<Measure the skewness of each variable\>
-We proceeded to measure the skewness of the variables we chose to use for this dataset namely Write down important points, Reorganise course outline and Take quizzes and use results. Take quizzes and use results as well as Write down important points is negatively (left skew), whereas Recognise course outline is Symmetrical.
-```{r Your Eighth Code Chunk}
-if (!is.element("e1071", installed.packages()[, 1])) {
-  install.packages("e1071", dependencies = TRUE)
-}
-require("e1071")
-sapply (Student_dataset[, 12:14],  skewness, type = 2)
+## \<View a summary of the model and view the confusion matrix\>
+From the SVM performing on the PimaIndians dataset we can see that a pregnant woman is less likely to get diabetes given the different variables the test dataset had. On a confidence level of 95% we can say that the model was 72% accurate in predicting the likelihood of diabetes in pregnant women.
+
+```{r Your Ninth Code Chunk}
+print(diabetes_dateset_model_svm)
+caret::confusionMatrix(predictions_svm, diabetes_dataset_test$diabetes)
 
 ```
 
