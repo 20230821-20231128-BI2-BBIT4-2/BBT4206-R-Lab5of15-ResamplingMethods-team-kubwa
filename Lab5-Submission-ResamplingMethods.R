@@ -348,29 +348,23 @@ plot(table(predictions_nb_caret,
                                       "stock")]$stock))
 
 # DATASET 2 (Splitting the dataset): Default of credit card clients ----
-defaulter_dataset <-
-  readr::read_csv(
-    "data/default of credit card clients.csv",
-    col_types = cols(
-      SEX = col_factor(levels = c("1", "2")),
-      EDUCATION = col_factor(levels = c("0", "1", "2", "3", "4", "5", "6")),
-      MARRIAGE = col_factor(levels = c("0", "1", "2", "3")),
-      `default payment next month` = col_factor(levels = c("1", "0")),
-      `default payment next month` = col_factor(levels = c("1", "0"))
-    ),
-    skip = 1
-  )
-summary(defaulter_dataset)
-str(defaulter_dataset)
+require("mlbench")
+
+data("PimaIndiansDiabetes")
+
+summary(PimaIndiansDiabetes)
+
+str(PimaIndiansDiabetes)
+
 
 ## 1. Split the dataset ----
 # Define an 80:20 train:test split ratio of the dataset
 # (80% of the original data will be used to train the model and 20% of the
 # original data will be used to test the model).
-train_index <- createDataPartition(defaulter_dataset$`default payment next month`, # nolint
+train_index <- createDataPartition(PimaIndiansDiabetes$`diabetes`, # nolint
                                    p = 0.80, list = FALSE)
-defaulter_dataset_train <- defaulter_dataset[train_index, ]
-defaulter_dataset_test <- defaulter_dataset[-train_index, ]
+diabetes_dataset_train <- PimaIndiansDiabetes[train_index, ]
+diabetes_dataset_test <- PimaIndiansDiabetes[-train_index, ]
 
 ## 2. Train a Naive Bayes classifier using the training dataset ----
 
@@ -589,19 +583,20 @@ caret::confusionMatrix(predictions_nb_e1071, churn_dateset_test$Churn)
 # times the dataset is split into k-subsets. The final model accuracy/RMSE is
 # taken as the mean from the number of repeats.
 
+
 train_control <- trainControl(method = "repeatedcv", number = 5, repeats = 3)
 
-churn_dateset_model_svm <-
-  caret::train(`Churn` ~ ., data = churn_dateset_train,
+diabetes_dateset_model_svm <-
+  caret::train(`diabetes` ~ ., data = diabetes_dataset_train,
                trControl = train_control, na.action = na.omit,
                method = "svmLinearWeights2", metric = "Accuracy")
 
 ### 5.b. Test the trained SVM model using the testing dataset ----
-predictions_svm <- predict(churn_dateset_model_svm, churn_dateset_test[, 1:13])
+predictions_svm <- predict(diabetes_dateset_model_svm, diabetes_dataset_test[, 1:9])
 
 ### 5.c. View a summary of the model and view the confusion matrix ----
-print(churn_dateset_model_svm)
-caret::confusionMatrix(predictions_svm, churn_dateset_test$Churn)
+print(diabetes_dateset_model_svm)
+caret::confusionMatrix(predictions_svm, diabetes_dataset_test$diabetes)
 
 ## 6. Classification: Naive Bayes with Leave One Out Cross Validation ----
 # In Leave One Out Cross-Validation (LOOCV), a data instance is left out and a
